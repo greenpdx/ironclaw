@@ -19,10 +19,10 @@
 //! ```
 
 pub mod credentials;
+pub mod fault_injection;
 
 use std::sync::Arc;
 use std::sync::Mutex;
-pub mod fault_injection;
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
@@ -1542,5 +1542,30 @@ mod tests {
         )
         .await
         .expect("update actuals");
+    }
+
+    #[tokio::test]
+    async fn stub_llm_fault_injector_sequence() {
+        use crate::llm::LlmProvider;
+        use crate::testing::fault_injection::{FaultAction, FaultInjector, FaultType};
+
+        let injector = Arc::new(FaultInjector::sequence([
+            FaultAction::Fail(FaultType::RateLimited { retry_after: None }),
+            FaultAction::Succeed,
+        ]));
+
+        let stub = StubLlm::new("hello").with_fault_injector(injector);
+
+        let req = crate::llm::CompletionRequest::new(vec![crate::llm::ChatMessage::user("hi")]);
+
+        // First call should fail with RateLimited
+        let result = stub.complete(req.clone()).await;
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), LlmError::RateLimited { .. }));
+
+        // Second call should succeed
+        let result = stub.complete(req).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().content, "hello");
     }
 }
