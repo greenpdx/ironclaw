@@ -16,8 +16,8 @@
 //! ]);
 //! ```
 
-use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::Duration;
 
 use crate::llm::error::LlmError;
@@ -206,7 +206,10 @@ mod tests {
         ]);
 
         // First two calls should fail
-        assert!(matches!(injector.next_action(), FaultAction::Fail(FaultType::RequestFailed)));
+        assert!(matches!(
+            injector.next_action(),
+            FaultAction::Fail(FaultType::RequestFailed)
+        ));
         assert!(matches!(
             injector.next_action(),
             FaultAction::Fail(FaultType::RateLimited { .. })
@@ -256,7 +259,10 @@ mod tests {
             LlmError::RequestFailed { .. }
         ));
         assert!(matches!(
-            FaultType::RateLimited { retry_after: Some(Duration::from_secs(5)) }.to_llm_error(provider),
+            FaultType::RateLimited {
+                retry_after: Some(Duration::from_secs(5))
+            }
+            .to_llm_error(provider),
             LlmError::RateLimited { .. }
         ));
         assert!(matches!(
