@@ -178,7 +178,7 @@ impl FaultInjector {
                     *state ^= *state << 17;
                     (*state as f64) / (u64::MAX as f64)
                 };
-                if random_val.abs() < *error_rate {
+                if random_val < *error_rate {
                     FaultAction::Fail(fault.clone())
                 } else {
                     FaultAction::Succeed

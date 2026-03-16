@@ -153,6 +153,25 @@ impl StubLlm {
         self.should_fail.store(fail, Ordering::Relaxed);
     }
 
+    /// Check the fault injector or should_fail flag, returning an error if
+    /// the call should fail, or None if it should succeed.
+    async fn check_faults(&self) -> Option<LlmError> {
+        if let Some(ref injector) = self.fault_injector {
+            match injector.next_action() {
+                fault_injection::FaultAction::Fail(fault) => {
+                    return Some(fault.to_llm_error(&self.model_name));
+                }
+                fault_injection::FaultAction::Delay(duration) => {
+                    tokio::time::sleep(duration).await;
+                }
+                fault_injection::FaultAction::Succeed => {}
+            }
+        } else if self.should_fail.load(Ordering::Relaxed) {
+            return Some(self.make_error());
+        }
+        None
+    }
+
     fn make_error(&self) -> LlmError {
         match self.error_kind {
             StubErrorKind::Transient => LlmError::RequestFailed {
@@ -185,22 +204,9 @@ impl LlmProvider for StubLlm {
 
     async fn complete(&self, _request: CompletionRequest) -> Result<CompletionResponse, LlmError> {
         self.call_count.fetch_add(1, Ordering::Relaxed);
-
-        // Fault injector takes precedence over should_fail.
-        if let Some(ref injector) = self.fault_injector {
-            match injector.next_action() {
-                fault_injection::FaultAction::Fail(fault) => {
-                    return Err(fault.to_llm_error(&self.model_name));
-                }
-                fault_injection::FaultAction::Delay(duration) => {
-                    tokio::time::sleep(duration).await;
-                }
-                fault_injection::FaultAction::Succeed => {}
-            }
-        } else if self.should_fail.load(Ordering::Relaxed) {
-            return Err(self.make_error());
+        if let Some(err) = self.check_faults().await {
+            return Err(err);
         }
-
         Ok(CompletionResponse {
             content: self.response.clone(),
             input_tokens: 10,
@@ -216,22 +222,9 @@ impl LlmProvider for StubLlm {
         _request: ToolCompletionRequest,
     ) -> Result<ToolCompletionResponse, LlmError> {
         self.call_count.fetch_add(1, Ordering::Relaxed);
-
-        // Fault injector takes precedence over should_fail.
-        if let Some(ref injector) = self.fault_injector {
-            match injector.next_action() {
-                fault_injection::FaultAction::Fail(fault) => {
-                    return Err(fault.to_llm_error(&self.model_name));
-                }
-                fault_injection::FaultAction::Delay(duration) => {
-                    tokio::time::sleep(duration).await;
-                }
-                fault_injection::FaultAction::Succeed => {}
-            }
-        } else if self.should_fail.load(Ordering::Relaxed) {
-            return Err(self.make_error());
+        if let Some(err) = self.check_faults().await {
+            return Err(err);
         }
-
         Ok(ToolCompletionResponse {
             content: Some(self.response.clone()),
             tool_calls: Vec::new(),
