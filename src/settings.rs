@@ -119,6 +119,18 @@ pub struct Settings {
     /// Transcription configuration.
     #[serde(default)]
     pub transcription: Option<TranscriptionSettings>,
+
+    /// TTS configuration.
+    #[serde(default)]
+    pub tts: Option<TtsSettings>,
+
+    /// Browser automation configuration.
+    #[serde(default)]
+    pub browser: Option<BrowserSettings>,
+
+    /// Local speech-to-text configuration.
+    #[serde(default)]
+    pub speech: Option<SpeechSettings>,
 }
 
 /// Source for the secrets master key.
@@ -715,6 +727,30 @@ impl Default for BuilderSettings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TranscriptionSettings {
     /// Whether audio transcription is enabled.
+    #[serde(default)]
+    pub enabled: bool,
+}
+
+/// TTS pipeline settings.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TtsSettings {
+    /// Whether TTS is enabled.
+    #[serde(default)]
+    pub enabled: bool,
+}
+
+/// Browser automation settings.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BrowserSettings {
+    /// Whether browser automation is enabled.
+    #[serde(default)]
+    pub enabled: bool,
+}
+
+/// Local speech-to-text settings.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpeechSettings {
+    /// Whether local STT is enabled.
     #[serde(default)]
     pub enabled: bool,
 }

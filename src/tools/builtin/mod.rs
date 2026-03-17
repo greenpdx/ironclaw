@@ -16,6 +16,7 @@ pub(crate) mod shell;
 pub mod skill_tools;
 mod time;
 mod tool_info;
+pub mod tts;
 
 pub use echo::EchoTool;
 pub use extension_tools::{
@@ -41,6 +42,7 @@ pub use shell::ShellTool;
 pub use skill_tools::{SkillInstallTool, SkillListTool, SkillRemoveTool, SkillSearchTool};
 pub use time::TimeTool;
 pub use tool_info::ToolInfoTool;
+pub use tts::SpeakTool;
 mod html_converter;
 pub mod image_analyze;
 pub mod image_edit;

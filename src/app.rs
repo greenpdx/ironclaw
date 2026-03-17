@@ -359,6 +359,20 @@ impl AppBuilder {
             }
         }
 
+        // Register browser tools if enabled
+        #[cfg(feature = "browser")]
+        if self.config.browser.enabled {
+            let session = Arc::new(crate::browser::BrowserSession::new(
+                self.config.browser.session.clone(),
+            ));
+            tools.register_browser_tools(session);
+        }
+
+        // Register TTS tool if enabled
+        if let Some(provider) = self.config.tts.create_provider() {
+            tools.register_tts_tools(Arc::from(provider));
+        }
+
         // Register builder tool if enabled
         if self.config.builder.enabled
             && (self.config.agent.allow_local_tools || !self.config.sandbox.enabled)

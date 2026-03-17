@@ -38,6 +38,10 @@
 //! - **Prompt injection defense** - Sanitize all external data
 //! - **Continuous learning** - Improve estimates from historical data
 
+#[cfg(feature = "browser")]
+pub mod browser;
+#[cfg(feature = "speech")]
+pub mod speech;
 pub mod agent;
 pub mod app;
 pub mod boot_screen;
@@ -72,6 +76,7 @@ pub mod timezone;
 pub mod tools;
 pub mod tracing_fmt;
 pub mod transcription;
+pub mod tts;
 pub mod tunnel;
 pub mod util;
 pub mod webhooks;

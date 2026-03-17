@@ -76,6 +76,14 @@ const PROTECTED_TOOL_NAMES: &[&str] = &[
     "image_edit",
     "image_analyze",
     "tool_info",
+    "speak",
+    "browser_navigate",
+    "browser_screenshot",
+    "browser_click",
+    "browser_type",
+    "browser_extract",
+    "browser_eval",
+    "browser_content",
 ];
 
 /// Registry of available tools.
@@ -568,6 +576,36 @@ impl ToolRegistry {
             base_dir,
         )));
         tracing::debug!("Registered 1 vision tool (analyze)");
+    }
+
+    /// Register browser automation tools.
+    ///
+    /// Seven tools that share a single browser session: navigate, screenshot,
+    /// click, type, extract, eval, and content. Requires `--features browser`.
+    #[cfg(feature = "browser")]
+    pub fn register_browser_tools(&self, session: Arc<crate::browser::BrowserSession>) {
+        use crate::browser::{
+            BrowserClickTool, BrowserContentTool, BrowserEvalTool, BrowserExtractTool,
+            BrowserNavigateTool, BrowserScreenshotTool, BrowserTypeTool,
+        };
+        self.register_sync(Arc::new(BrowserNavigateTool::new(Arc::clone(&session))));
+        self.register_sync(Arc::new(BrowserScreenshotTool::new(Arc::clone(&session))));
+        self.register_sync(Arc::new(BrowserClickTool::new(Arc::clone(&session))));
+        self.register_sync(Arc::new(BrowserTypeTool::new(Arc::clone(&session))));
+        self.register_sync(Arc::new(BrowserExtractTool::new(Arc::clone(&session))));
+        self.register_sync(Arc::new(BrowserEvalTool::new(Arc::clone(&session))));
+        self.register_sync(Arc::new(BrowserContentTool::new(session)));
+        tracing::debug!("Registered 7 browser automation tools");
+    }
+
+    /// Register TTS (text-to-speech) tool.
+    ///
+    /// Requires a configured TTS provider. The `speak` tool allows the agent
+    /// to synthesize text into audio using cloud APIs (OpenAI, ElevenLabs).
+    pub fn register_tts_tools(&self, provider: Arc<dyn crate::tts::TtsProvider>) {
+        use crate::tools::builtin::SpeakTool;
+        self.register_sync(Arc::new(SpeakTool::new(provider)));
+        tracing::debug!("Registered 1 TTS tool (speak)");
     }
 
     /// Register the software builder tool.

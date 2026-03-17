@@ -6,6 +6,7 @@
 //! table, or auto-detection.
 
 mod agent;
+pub mod browser;
 mod builder;
 mod channels;
 mod database;
@@ -18,10 +19,12 @@ pub mod relay;
 mod routines;
 mod safety;
 mod sandbox;
+pub(crate) mod speech;
 mod search;
 mod secrets;
 mod skills;
 mod transcription;
+mod tts;
 mod tunnel;
 mod wasm;
 
@@ -33,6 +36,7 @@ use crate::settings::Settings;
 
 // Re-export all public types so `crate::config::FooConfig` continues to work.
 pub use self::agent::AgentConfig;
+pub use self::browser::BrowserConfig;
 pub use self::builder::BuilderModeConfig;
 pub use self::channels::{
     ChannelsConfig, CliConfig, DEFAULT_GATEWAY_PORT, GatewayConfig, HttpConfig, SignalConfig,
@@ -48,9 +52,11 @@ pub use self::safety::SafetyConfig;
 use self::safety::resolve_safety_config;
 pub use self::sandbox::{ClaudeCodeConfig, SandboxModeConfig};
 pub use self::search::WorkspaceSearchConfig;
+pub use self::speech::SpeechConfig;
 pub use self::secrets::SecretsConfig;
 pub use self::skills::SkillsConfig;
 pub use self::transcription::TranscriptionConfig;
+pub use self::tts::TtsConfig;
 pub use self::tunnel::TunnelConfig;
 pub use self::wasm::WasmConfig;
 pub use crate::llm::config::{
@@ -95,6 +101,9 @@ pub struct Config {
     pub claude_code: ClaudeCodeConfig,
     pub skills: SkillsConfig,
     pub transcription: TranscriptionConfig,
+    pub tts: TtsConfig,
+    pub browser: BrowserConfig,
+    pub speech: SpeechConfig,
     pub search: WorkspaceSearchConfig,
     pub observability: crate::observability::ObservabilityConfig,
     /// Channel-relay integration (Slack via external relay service).
@@ -171,6 +180,9 @@ impl Config {
                 ..SkillsConfig::default()
             },
             transcription: TranscriptionConfig::default(),
+            tts: TtsConfig::default(),
+            browser: BrowserConfig::default(),
+            speech: SpeechConfig::default(),
             search: WorkspaceSearchConfig::default(),
             observability: crate::observability::ObservabilityConfig::default(),
             relay: None,
@@ -328,6 +340,9 @@ impl Config {
             claude_code: ClaudeCodeConfig::resolve(settings)?,
             skills: SkillsConfig::resolve()?,
             transcription: TranscriptionConfig::resolve(settings)?,
+            tts: TtsConfig::resolve(settings)?,
+            browser: BrowserConfig::resolve(settings)?,
+            speech: SpeechConfig::resolve(settings)?,
             search: WorkspaceSearchConfig::resolve()?,
             observability: crate::observability::ObservabilityConfig {
                 backend: std::env::var("OBSERVABILITY_BACKEND").unwrap_or_else(|_| "none".into()),

@@ -178,6 +178,14 @@ readabilityrs = { version = "0.1.2", optional = true }
 ed25519-dalek = { version = "2.2.0", features = ["std"] }
 hex = "0.4.3"
 
+# Browser automation (feature gated)
+chromiumoxide = { version = "0.7", optional = true, default-features = false, features = ["tokio-runtime"] }
+
+# Local speech-to-text via whisper.cpp (feature gated)
+whisper-rs = { version = "0.14", optional = true }
+cpal = { version = "0.15", optional = true }
+ringbuf = { version = "0.4", optional = true }
+
 # OpenClaw import (feature gated)
 json5 = { version = "0.4", optional = true }
 
@@ -225,6 +233,8 @@ libsql = ["dep:libsql"]
 integration = []
 html-to-markdown = ["dep:html-to-markdown-rs", "dep:readabilityrs"]
 bedrock = ["dep:aws-config", "dep:aws-sdk-bedrockruntime", "dep:aws-smithy-types"]
+browser = ["dep:chromiumoxide"]
+speech = ["dep:whisper-rs", "dep:cpal", "dep:ringbuf"]
 import = ["dep:json5", "libsql"]
 
 [[test]]
